@@ -7,9 +7,6 @@ Created on Tue Jul 25 20:26:55 2023
 @author: Petar
 """
 
-#This is copied from the videos by DigitalSreeni ("Image Segmentation using U-Net").
-#I also tried Aladdin Persson's U-Net where he built it from scratch, but I didn't understand it so well.
-
 import tensorflow as tf
 import os
 import random
