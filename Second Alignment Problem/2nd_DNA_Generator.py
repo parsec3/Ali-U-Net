@@ -7,6 +7,9 @@ Created on Thu Aug 10 13:08:49 2023
 @author: Petar
 """
 
+#For the second alignment problem, we will produce an alignment that relies on gaps to work and then remove those gaps to unalign it. The net will have to transform the latter into the former. 
+#A lot of this code is the same as in the first alignment problem.
+
 import random
 import numpy as np
 import tensorflow as tf
@@ -49,7 +52,6 @@ def make_sequences(rows,columns):
     sequence = []
     for i in range(columns):
       sequence += random.choices(nucleotides, weights=profile[i], k=1)
-  #  sequence = ''.join(sequence)  ##I'll keep this as an on/off-switch in case we need the raw letters.
     sequences += [sequence]
   sequences = np.array(sequences)
   return sequences
@@ -88,13 +90,13 @@ def add_gaps(rows,columns):
           gap_size = 6 #Ground pattern for all the gaps
           gap_site = int(columns/4) #Gap position to the left of the middle
           gap_site2 = int(3*columns/4) #Gap position to the right of the middle.
-          sequences = [] #This is all familiar
-          shift_sequences = [] #We create two sequences this time!
+          sequences = [] #This is the aligned case
+          shift_sequences = [] #This is the unaligned case
           for i in range(rows):
               sequence = list(sequence_array[i])
-              shift_sequence = list(sequence_array[i]) #Again, we need everything twice, this time.
+              shift_sequence = list(sequence_array[i])
               skip = random.choices(range(rows),k=5)
-              if i in skip:
+              if i in skip:  #We'll add a few gapless sequences to explain why the other sequences need gaps at all.
                 sequence = ''.join(sequence)
                 shift_sequence = ''.join(shift_sequence)
                 sequences += [sequence]
@@ -124,7 +126,7 @@ def add_gaps(rows,columns):
 
 gap_sequence = add_gaps(96,96)
 
-def add_unit_gaps(sequence_array): ##Now for the unit vector.
+def add_unit_gaps(sequence_array): #Now for the unit vector.
         sequences = [] #Build the array new.
         for i in range(sequence_array.shape[0]): #Loops through all the rows of the array.
             sequence = list(sequence_array[i]) #Access the rows individually.
@@ -136,8 +138,8 @@ def add_unit_gaps(sequence_array): ##Now for the unit vector.
 
 gap_sequences, shift_gap_sequences = next(gap_sequence)
 
-train_no_shift = np.empty((50000,96,96,5),dtype='uint8') #For the unshifted gaps.
-train_shift = np.empty((50000,96,96,5),dtype='uint8') #For the shifted gaps.
+train_no_shift = np.empty((50000,96,96,5),dtype='uint8')
+train_shift = np.empty((50000,96,96,5),dtype='uint8')
 
 for i in range(50000):
   gap_sequences, shift_gap_sequences = next(gap_sequence)
