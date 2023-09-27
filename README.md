@@ -6,11 +6,17 @@ A large part of the field of bioinformatics consists of comparing DNA or protein
 
 It is common for DNA alignment software to maximize the overlap by adding gaps to the sequences. This is meant to account for differences in the reading order caused by indels.
 E.g.
+
 AACCTT
+
 AATT
+
 These two sequences are poorly aligned, but alignment can be improved.
+
 AACCTT
+
 AA--TT
+
 Naturally, adding gaps makes the alignment worse in other ways, so biologists must evaluate whether the presence of gaps creates more matches than its absence.
 
 The neural net presented here will deal with two problems.
