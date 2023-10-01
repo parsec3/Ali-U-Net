@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Sep 30 13:25:19 2023
+
+@author: Petar
+"""
+
+#In the second alignment problem, model carries out tasks similar to established bioinformatics software (e.g. MUSCLE, MAFFT).
+#Therefore, we will make a comparison between the two.
+#For that, we first need to convert some of our training data into FASTA files (which are the standard in bioinformatics).
+
+
+import numpy as np
+
+
+nucleotide = ["A", "C", "G", "T", "-"]
+
+def make_predict_sequences(pred_array):
+  sequences = []
+  rows = pred_array.shape[0]
+  columns = pred_array.shape[1]
+  for i in range(rows):
+    weight_profile = pred_array[i]
+    sequence = []
+    for j in range(columns):
+     probs = list(weight_profile[j])
+     position =  probs.index(max(probs))
+     sequence += nucleotide[position]
+    sequence = ''.join(sequence)
+    sequences += [sequence]
+  sequences = np.array(sequences)
+  return sequences
+
+#This is familiar from before: We import our training data and convert the first entry into a FASTA file.
+
+loaded = np.load('flatterrand_shift_sequences.npz')
+
+X = loaded['x']
+
+first_unit_sequence = X[0]
+first_sequence = make_predict_sequences(first_unit_sequence)
+
+
+list_seq = []
+
+for s in first_sequence:
+    list_seq += [s]
+
+list_name = []
+
+for t in range(len(list_seq)):
+    number = t +1
+    element = "Seq" + str(number)
+    list_name += [element]
+
+ofile = open(r"C:\Users\mapap\Documents\.spyder-py3\unaligned.fasta", "w")
+
+for i in range(len(list_seq)):
+    ofile.write(">" + list_name[i] + "\n" +list_seq[i] + "\n") #General format of a FASTA file.
+
+ofile.close()
