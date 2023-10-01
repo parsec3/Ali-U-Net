@@ -83,5 +83,5 @@ total_hits = accurate_hits + inaccurate_hits
 
 print("MAFFT achieves a total accuracy of ",accurate_hits/total_hits,"%.")
 
-#I got the result "MAFFT achieves a total accuracy of 0.987%."
+#I got the result "MAFFT achieves a total accuracy of 98.741%."
 #This is the accuracy that the Alig-Net has to defeat.
