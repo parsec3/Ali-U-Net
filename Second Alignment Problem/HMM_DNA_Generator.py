@@ -5,6 +5,9 @@ Created on Sun Nov 12 17:14:51 2023
 @author: Petar
 """
 
+#This is mainly an alternative path to DNA Simulation using Hidden Markov Models (HMMs).
+I won't use it, but it's cool to have since HMMs are frequently used in bioinformatics for modeling multiple-sequence data.
+
 import numpy as np
 from hmmlearn import hmm
 from Bio import SeqIO
