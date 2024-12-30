@@ -1,4 +1,4 @@
-# Alig-Net
+# Ali-U-Net
 A neural network for solving DNA alignment problems in bioinformatics.
 
 Some background for non-biologists:
