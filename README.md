@@ -14,11 +14,6 @@ AACCTT
 
 AA--TT
 
-Naturally, adding gaps makes the alignment worse in other ways, so biologists must evaluate whether the presence of gaps creates more matches than its absence.
+As each insertion of gaps adds matches and mismatches, algorithms must be assessed for optimality which becomes more difficult with increasing size of the alignment.
 
-The neural net presented here will deal with two problems.
-
-First, it will deal with a multiple-sequence alignment where the gaps have been placed incorrectly and place them correctly.
-Second, it will be presented with unaligned DNA sequences and it will be forced to correctly place gaps in a way that maximizes overlap.
-
-For that end, the neural net will receive matrices of correctly and incorrectly aligned DNA multiple-sequence alignments as training data to perform supervised learning.
+The Ali-U-Net is a transformer which learns multiple-sequence alignment through supervised learning. The network along with the simulator for the training data are presented in this repository.
