@@ -1,10 +1,7 @@
 # Ali-U-Net
-A neural network for solving DNA alignment problems in bioinformatics.
+The field of bioinformatics concerns itself with assessing DNA or protein sequences for their similarity, as finding the arrangements with the greatest overlap of residues helds to determine evolutionary relationships. Mismatches can be caused by point mutations, but especially by insertions or deletions (indels) of nucleotides where the entire reading order of the sequence might be shifted.
 
-Some background for non-biologists:
-A large part of the field of bioinformatics consists of comparing DNA or protein sequences and seeing how similar they are in order to determine evolutionary relationships. Finding the arrangement with the greatest overlap of nucleotides is called alignment. Common reasons why different DNA strands will not overlap, even if they are of closely related specimens, are genetic mutations. Common genetic mutations include, point mutations, where one nucleotide is replaced by another, indels, where nucleotides are being added or removed. The latter are generally more severe because, while point mutations can cause mismatch among one or two nucleotides, having one nucleotide too much or too little can shift the entire reading order sequence.
-
-It is common for DNA alignment software to maximize the overlap by adding gaps to the sequences. This is meant to account for differences in the reading order caused by indels.
+It is common for DNA alignment software to maximize the overlap by adding gaps to the sequences to account for indels of nucleotides.
 E.g.
 
 AACCTT
