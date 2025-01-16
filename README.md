@@ -1,19 +1,26 @@
 # Ali-U-Net
-The field of bioinformatics concerns itself with assessing DNA or protein sequences for their similarity, as finding the arrangements with the greatest overlap of residues helds to determine evolutionary relationships. Mismatches can be caused by point mutations, but especially by insertions or deletions (indels) of nucleotides where the entire reading order of the sequence might be shifted.
+Aligning nucleotide sequences with a convolutional transformer neural network.
 
-It is common for DNA alignment software to maximize the overlap by adding gaps to the sequences to account for indels of nucleotides.
-E.g.
+## The multiple sequence alignment problem
+Determining the best multiple or pairwise sequence alignment lies at the basis of most sequence comparisons and therefore is a key problem in bioinformatics. The aim of aligning multiple homologous sequences of e.g. nucleotides or amino acids is to maximise the number of homologous residues that are found in the same alignment column of a multiple sequence alignment by adding gaps. See the [wikipedia article for more details about multiple sequence alignments](https://en.wikipedia.org/wiki/Multiple_sequence_alignment).
 
-AACCTT
+## The neural network
+We present Ali-U-Net, a novel supervised machine learning strategy for the multiple sequence alignment problem using a slightly modified U-Net [Ronneberger et al. 2015](http://arxiv.org/abs/1505.04597) to transform unaligned sequences to a multiple sequence alignment. The U-Net is built using a series of convolutional layers that encode the image (encoder branch), followed by a series of upsampling/transpose convolutional layers (decoder branch) in which the resolution of the original image is reintroduced by skip connections from the decoder branch. This architecture will be used here to transform the matrix of unaligned nucleotides to a matrix of aligned nucleotides.
 
-AATT
+## Implementation
+This repository contains the code of 
+- the Ali-U-Net neural networks implemented using Python and Tensorflow
+- Python scripts to create the training data sets
+- Python scripts to train the Ali-U-Net
+- Python scripts to predict alignments for unaligned sequences
 
-These two sequences are poorly aligned, but alignment can be improved.
+## Installing prerequisite: Tensorflow Library
+We recommend to install Tensorflow using the [miniforge package manager](https://github.com/conda-forge/miniforge).
 
-AACCTT
+## Authors:
+Petar Arsic [(Leibniz Institute for the Analysis of Biodiversity Change, Bonn)](https://bonn.leibniz-lib.de/de/forschung)\
+Christoph Mayer [(Leibniz Institute for the Analysis of Biodiversity Change, Bonn)](https://bonn.leibniz-lib.de/de/forschung)
 
-AA--TT
+## Reference: When using the Ali-U-Net, please cite:
+xxx
 
-As each insertion of gaps adds matches and mismatches, algorithms must be assessed for optimality which becomes more difficult with increasing size of the alignment.
-
-The Ali-U-Net is a transformer which learns multiple-sequence alignment through supervised learning. The network along with the simulator for the training data are presented in this repository.
