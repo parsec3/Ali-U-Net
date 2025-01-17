@@ -14,8 +14,12 @@ This repository contains the code of
 - Python scripts to train the Ali-U-Net
 - Python scripts to predict alignments for unaligned sequences
 
-## Installing prerequisite: Tensorflow Library
-We recommend to install Tensorflow using the [miniforge package manager](https://github.com/conda-forge/miniforge).
+## Installing Tensorflow Library
+We recommend to install Tensorflow using the [miniforge package manager](https://github.com/conda-forge/miniforge)
+and the following commands:
+```
+conda create --name name_of_the_environment tensorflow
+```
 
 ## Authors:
 Petar Arsic [(Leibniz Institute for the Analysis of Biodiversity Change, Bonn)](https://bonn.leibniz-lib.de/de/forschung)\
