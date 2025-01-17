@@ -15,6 +15,7 @@ This repository contains the code of
 - Python scripts to predict alignments for unaligned sequences
 
 ## Installing Tensorflow Library
+The only library that needs to be installed for this project is the Tensorflow Library.
 We recommend to install Tensorflow using the [miniforge package manager](https://github.com/conda-forge/miniforge)
 and the following commands:
 ```
