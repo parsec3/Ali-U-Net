@@ -11,7 +11,6 @@ Created on Sun Jan 19 17:57:56 2025
 import argparse
 import tensorflow as tf
 import numpy as np
-from sklearn.model_selection import train_test_split
 import os
 
 seed = 42
