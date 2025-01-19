@@ -2,263 +2,156 @@
 
 # -*- coding: utf-8 -*-
 """
-Created on Fri Aug 11 16:13:56 2023
+Created on Sun Jan 19 17:57:56 2025
 
 @author: Petar
 """
 
 
-
+import argparse
 import tensorflow as tf
 import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import GridSearchCV
-import keras
-
-class DepthwiseSeparableConv2D(keras.layers.Layer):
-  def __init__(self, filters, kernel_size, activation, padding):
-    super(DepthwiseSeparableConv2D, self).__init__()
-    self.depthwise = tf.keras.layers.DepthwiseConv2D(kernel_size = kernel_size, padding = padding, activation = activation)
-    self.pointwise = tf.keras.layers.Conv2D(filters = filters, kernel_size = (1, 1), activation = activation)
-
-  def call(self, input_tensor):
-    x = self.depthwise(input_tensor)
-    return self.pointwise(x)
+import os
 
 seed = 42
 np.random.seed = seed
 
+parser = argparse.ArgumentParser(description="Train the Ali-U-Net on simulated alignments.")
+
+parser.add_argument("rows", type=int,  help="The rows in the training data.")
+parser.add_argument("columns", type=int,  help="The columns in the training data.")
+parser.add_argument("activation", type=str, help="The activation function.")
+parser.add_argument("initialization", type=str, help="The initialization function.")
+parser.add_argument("training_data", type=str, help="The training dataset.")
+parser.add_argument("test_data", type=str, help="The test dataset.")
+parser.add_argument("file_path", type=str, help="The filepath.")
+
+args = parser.parse_args()
+
+act_fun = args.activation      # "sigmoid" OR "relu"
+act_init = args.initialization # "glorot_normal" OR "he_normal"
+
+rows = args.rows       # 48 OR 96
+columns = args.columns # 48 OR 96
+
 #Let's adapt the net to our model
-inputs = tf.keras.layers.Input(shape=(96, 96, 5))
-s = tf.keras.layers.Lambda(lambda x: x / 255)(inputs)
+inputs = tf.keras.layers.Input(shape=(rows, columns, 5))
 
-
-#Input 1
-
-#Contraction path
-c1 = DepthwiseSeparableConv2D(32, (11, 1), activation='relu', padding='same')(s) #96
+# Contraction path
+c1 = tf.keras.layers.Conv2D(32, (11, 11), activation=act_fun, kernel_initializer=act_init, padding='same')(inputs) # Output size: 48x48x32
 c1 = tf.keras.layers.Dropout(0.1)(c1)
-c1 = DepthwiseSeparableConv2D(32, (11, 1), activation='relu', padding='same')(c1)
-p1 = tf.keras.layers.MaxPooling2D((2, 2))(c1) #48
+c1 = tf.keras.layers.Conv2D(32, (11, 11), activation=act_fun, kernel_initializer=act_init, padding='same')(c1)
+p1 = tf.keras.layers.MaxPooling2D((2, 2))(c1) # Output size: 24x24x32
 
-c2 = DepthwiseSeparableConv2D(64, (7, 1), activation='relu', padding='same')(p1) #48
+c2 = tf.keras.layers.Conv2D(64, (7, 7), activation=act_fun, kernel_initializer=act_init, padding='same')(p1)  # Output size: 24x24x64
 c2 = tf.keras.layers.Dropout(0.1)(c2)
-c2 = DepthwiseSeparableConv2D(64, (7, 1), activation='relu', padding='same')(c2)
-p2 = tf.keras.layers.MaxPooling2D((2, 2))(c2) #24
+c2 = tf.keras.layers.Conv2D(64, (7, 7), activation=act_fun, kernel_initializer=act_init, padding='same')(c2)
+p2 = tf.keras.layers.MaxPooling2D((2, 2))(c2) # Output size: 12x12x64
 
-c3 = DepthwiseSeparableConv2D(128, (5, 1), activation='relu', padding='same')(p2) #24
+c3 = tf.keras.layers.Conv2D(128, (5, 5), activation=act_fun, kernel_initializer=act_init, padding='same')(p2) # Output size 12x12x128
 c3 = tf.keras.layers.Dropout(0.2)(c3)
-c3 = DepthwiseSeparableConv2D(128, (5, 1), activation='relu', padding='same')(c3)
-p3 = tf.keras.layers.MaxPooling2D((2, 2))(c3) #12
+c3 = tf.keras.layers.Conv2D(128, (5, 5), activation=act_fun, kernel_initializer=act_init, padding='same')(c3)
+p3 = tf.keras.layers.MaxPooling2D((2, 2))(c3) # Output size 6x6x128
 
-c4 = DepthwiseSeparableConv2D(128, (4, 1), activation='relu', padding='same')(p3) #12
+c4 = tf.keras.layers.Conv2D(128, (4, 4), activation=act_fun, kernel_initializer=act_init, padding='same')(p3) # Output size 6x6x128
 c4 = tf.keras.layers.Dropout(0.2)(c4)
-c4 = DepthwiseSeparableConv2D(128, (4, 1), activation='relu', padding='same')(c4)
-p4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(c4) #6
+c4 = tf.keras.layers.Conv2D(128, (4, 4), activation=act_fun, kernel_initializer=act_init, padding='same')(c4)
+p4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(c4) # Output size 3x3x128
 
-c5 = DepthwiseSeparableConv2D(256, (3, 1), activation='relu', padding='same')(p4)
+c5 = tf.keras.layers.Conv2D(256, (3, 3), activation=act_fun, kernel_initializer=act_init, padding='same')(p4)
 c5 = tf.keras.layers.Dropout(0.3)(c5)
-c5 = DepthwiseSeparableConv2D(256, (3, 1), activation='relu', padding='same')(c5) #6
+c5 = tf.keras.layers.Conv2D(256, (3, 3), activation=act_fun, kernel_initializer=act_init, padding='same')(c5) #Output size is 3x3x256
 
 #Expansive path
-u6 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c5) #12
-u6 = tf.keras.layers.concatenate([u6, c4]) #12 12
-c6 = DepthwiseSeparableConv2D(128, (4, 1), activation='relu', padding='same')(u6)
+u6 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c5) 
+u6 = tf.keras.layers.concatenate([u6, c4]) # Output size is 6x6x256
+c6 = tf.keras.layers.Conv2D(128, (4, 4), activation=act_fun, kernel_initializer=act_init, padding='same')(u6)
 c6 = tf.keras.layers.Dropout(0.2)(c6)
-c6 = DepthwiseSeparableConv2D(128, (4, 1), activation='relu', padding='same')(c6)
+c6 = tf.keras.layers.Conv2D(128, (4, 4), activation=act_fun, kernel_initializer=act_init, padding='same')(c6)
 
-u7 = tf.keras.layers.Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c6) #24
-u7 = tf.keras.layers.concatenate([u7, c3]) #24 24
-c7 = DepthwiseSeparableConv2D(128, (5, 1), activation='relu', padding='same')(u7)
+u7 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c6) # Output size is 12x12x128
+u7 = tf.keras.layers.concatenate([u7, c3])  # Output size is 12x12x256
+c7 = tf.keras.layers.Conv2D(128, (5, 5), activation=act_fun, kernel_initializer=act_init, padding='same')(u7)
 c7 = tf.keras.layers.Dropout(0.2)(c7)
-c7 = DepthwiseSeparableConv2D(128, (5, 1), activation='relu', padding='same')(c7)
+c7 = tf.keras.layers.Conv2D(128, (5, 5), activation=act_fun, kernel_initializer=act_init, padding='same')(c7)
 
-u8 = tf.keras.layers.Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(c7) #48
-u8 = tf.keras.layers.concatenate([u8, c2]) #48 48
-c8 = DepthwiseSeparableConv2D(64, (7, 1), activation='relu', padding='same')(u8)
+u8 = tf.keras.layers.Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c7) # Output size is 24x24x64
+u8 = tf.keras.layers.concatenate([u8, c2])  # Output size is 24x24x128
+c8 = tf.keras.layers.Conv2D(64, (7, 7), activation=act_fun, kernel_initializer=act_init, padding='same')(u8)
 c8 = tf.keras.layers.Dropout(0.1)(c8)
-c8 = DepthwiseSeparableConv2D(64, (7, 1), activation='relu', padding='same')(c8)
+c8 = tf.keras.layers.Conv2D(64, (7, 7), activation=act_fun, kernel_initializer=act_init, padding='same')(c8)
 
-u9 = tf.keras.layers.Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same')(c8) #96
-u9 = tf.keras.layers.concatenate([u9, c1], axis=3) #96 96
-c9 = DepthwiseSeparableConv2D(32, (11, 1), activation='relu', padding='same')(u9)
+u9 = tf.keras.layers.Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(c8)  # Output size is 48x48x32
+u9 = tf.keras.layers.concatenate([u9, c1], axis=3) # Output size is 48x48
+c9 = tf.keras.layers.Conv2D(32, (11, 11), activation=act_fun, kernel_initializer=act_init, padding='same')(u9)
 c9 = tf.keras.layers.Dropout(0.1)(c9)
-c9 = DepthwiseSeparableConv2D(32, (11, 1), activation='relu', padding='same')(c9)
+c9 = tf.keras.layers.Conv2D(32, (11, 11), activation=act_fun, kernel_initializer=act_init, padding='same')(c9) # Output size is 48x48x32
+
 
 
 outputs = tf.keras.layers.Conv2D(5, (1, 1), activation='sigmoid')(c9)
 
-x = tf.keras.Model(inputs=inputs,outputs=outputs)
+a = tf.keras.layers.Dense(5, activation="softmax")(outputs)
 
+from tensorflow.io import serialize_tensor, parse_tensor
 
-#Input 2
+def parse_record(example):
+    print("parse_record_fn has been called.")
+    feature_description = {
+        'x': tf.io.FixedLenFeature([], tf.string),
+        'y': tf.io.FixedLenFeature([], tf.string),
+    }
+    example = tf.io.parse_single_example(example, feature_description)
+    x = tf.io.decode_raw(example['x'], tf.uint8)
+    y = tf.io.decode_raw(example['y'], tf.uint8)
+    x = tf.one_hot(x,5)
+    y = tf.one_hot(y,5)
+    x = tf.reshape(x, (rows, columns, 5))  # Assuming the shape of your data
+    y = tf.reshape(y, (rows, columns, 5))   # Assuming the shape of your data
+    return x, y
 
-#Contraction path
-c1 = DepthwiseSeparableConv2D(32, (1, 11), activation='relu', padding='same')(s) #96
-c1 = tf.keras.layers.Dropout(0.1)(c1)
-c1 = DepthwiseSeparableConv2D(32, (1, 11), activation='relu', padding='same')(c1)
-p1 = tf.keras.layers.MaxPooling2D((2, 2))(c1) #48
+batch_size = 64
+epochs = 50
 
-c2 = DepthwiseSeparableConv2D(64, (1, 11), activation='relu', padding='same')(p1) #48
-c2 = tf.keras.layers.Dropout(0.1)(c2)
-c2 = DepthwiseSeparableConv2D(64, (1, 11), activation='relu', padding='same')(c2)
-p2 = tf.keras.layers.MaxPooling2D((2, 2))(c2) #24
+# Create and compile the model
 
-c3 = DepthwiseSeparableConv2D(128, (1, 11), activation='relu', padding='same')(p2) #24
-c3 = tf.keras.layers.Dropout(0.2)(c3)
-c3 = DepthwiseSeparableConv2D(128, (1, 11), activation='relu', padding='same')(c3)
-p3 = tf.keras.layers.MaxPooling2D((2, 2))(c3) #12
-
-c4 = DepthwiseSeparableConv2D(128, (1, 11), activation='relu', padding='same')(p3) #12
-c4 = tf.keras.layers.Dropout(0.2)(c4)
-c4 = DepthwiseSeparableConv2D(128, (1, 11), activation='relu', padding='same')(c4)
-p4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(c4) #6
-
-c5 = DepthwiseSeparableConv2D(256, (1, 11), activation='relu', padding='same')(p4)
-c5 = tf.keras.layers.Dropout(0.3)(c5)
-c5 = DepthwiseSeparableConv2D(256, (1, 11), activation='relu', padding='same')(c5) #6
-
-#Expansive path
-u6 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c5) #12
-u6 = tf.keras.layers.concatenate([u6, c4]) #12 12
-c6 = DepthwiseSeparableConv2D(128, (1, 11), activation='relu', padding='same')(u6)
-c6 = tf.keras.layers.Dropout(0.2)(c6)
-c6 = DepthwiseSeparableConv2D(128, (1, 11), activation='relu', padding='same')(c6)
-
-u7 = tf.keras.layers.Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c6) #24
-u7 = tf.keras.layers.concatenate([u7, c3]) #24 24
-c7 = DepthwiseSeparableConv2D(128, (1, 11), activation='relu', padding='same')(u7)
-c7 = tf.keras.layers.Dropout(0.2)(c7)
-c7 = DepthwiseSeparableConv2D(128, (1, 11), activation='relu', padding='same')(c7)
-
-u8 = tf.keras.layers.Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(c7) #48
-u8 = tf.keras.layers.concatenate([u8, c2]) #48 48
-c8 = DepthwiseSeparableConv2D(64, (1, 11), activation='relu', padding='same')(u8)
-c8 = tf.keras.layers.Dropout(0.1)(c8)
-c8 = DepthwiseSeparableConv2D(64, (1, 11), activation='relu', padding='same')(c8)
-
-u9 = tf.keras.layers.Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same')(c8) #96
-u9 = tf.keras.layers.concatenate([u9, c1], axis=3) #96 96
-c9 = DepthwiseSeparableConv2D(32, (1, 11), activation='relu', padding='same')(u9)
-c9 = tf.keras.layers.Dropout(0.1)(c9)
-c9 = DepthwiseSeparableConv2D(32, (11, 11), activation='relu', padding='same')(c9)
-
-outputs = tf.keras.layers.Conv2D(5, (1, 1), activation='sigmoid')(c9)
-
-y = tf.keras.Model(inputs=inputs,outputs=outputs)
-
-
-#Input 3
-
-#Contraction path
-c1 = DepthwiseSeparableConv2D(32, (11, 11), activation='relu', padding='same')(s) #96
-c1 = tf.keras.layers.Dropout(0.1)(c1)
-c1 = DepthwiseSeparableConv2D(32, (11, 11), activation='relu', padding='same')(c1)
-p1 = tf.keras.layers.MaxPooling2D((2, 2))(c1) #48
-
-c2 = DepthwiseSeparableConv2D(64, (7, 7), activation='relu', padding='same')(p1) #48
-c2 = tf.keras.layers.Dropout(0.1)(c2)
-c2 = DepthwiseSeparableConv2D(64, (7, 7), activation='relu', padding='same')(c2)
-p2 = tf.keras.layers.MaxPooling2D((2, 2))(c2) #24
-
-c3 = DepthwiseSeparableConv2D(128, (5, 5), activation='relu', padding='same')(p2) #24
-c3 = tf.keras.layers.Dropout(0.2)(c3)
-c3 = DepthwiseSeparableConv2D(128, (5, 5), activation='relu', padding='same')(c3)
-p3 = tf.keras.layers.MaxPooling2D((2, 2))(c3) #12
-
-c4 = DepthwiseSeparableConv2D(128, (4, 4), activation='relu', padding='same')(p3) #12
-c4 = tf.keras.layers.Dropout(0.2)(c4)
-c4 = DepthwiseSeparableConv2D(128, (4, 4), activation='relu', padding='same')(c4)
-p4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(c4) #6
-
-c5 = DepthwiseSeparableConv2D(256, (3, 3), activation='relu', padding='same')(p4)
-c5 = tf.keras.layers.Dropout(0.3)(c5)
-c5 = DepthwiseSeparableConv2D(256, (3, 3), activation='relu', padding='same')(c5) #6
-
-#Expansive path
-u6 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c5) #12
-u6 = tf.keras.layers.concatenate([u6, c4]) #12 12
-c6 = DepthwiseSeparableConv2D(128, (4, 4), activation='relu', padding='same')(u6)
-c6 = tf.keras.layers.Dropout(0.2)(c6)
-c6 = DepthwiseSeparableConv2D(128, (4, 4), activation='relu', padding='same')(c6)
-
-u7 = tf.keras.layers.Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c6) #24
-u7 = tf.keras.layers.concatenate([u7, c3]) #24 24
-c7 = DepthwiseSeparableConv2D(128, (5, 5), activation='relu', padding='same')(u7)
-c7 = tf.keras.layers.Dropout(0.2)(c7)
-c7 = DepthwiseSeparableConv2D(128, (5, 5), activation='relu', padding='same')(c7)
-
-u8 = tf.keras.layers.Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(c7) #48
-u8 = tf.keras.layers.concatenate([u8, c2]) #48 48
-c8 = DepthwiseSeparableConv2D(64, (7, 7), activation='relu', padding='same')(u8)
-c8 = tf.keras.layers.Dropout(0.1)(c8)
-c8 = DepthwiseSeparableConv2D(64, (7, 7), activation='relu', padding='same')(c8)
-
-u9 = tf.keras.layers.Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same')(c8) #96
-u9 = tf.keras.layers.concatenate([u9, c1], axis=3) #96 96
-c9 = DepthwiseSeparableConv2D(32, (11, 11), activation='relu', padding='same')(u9)
-c9 = tf.keras.layers.Dropout(0.1)(c9)
-c9 = DepthwiseSeparableConv2D(32, (11, 11), activation='relu', padding='same')(c9)
-
-
-outputs = tf.keras.layers.Conv2D(5, (1, 1), activation='sigmoid')(c9)
-
-z = tf.keras.Model(inputs=inputs,outputs=outputs)
-
-
-combined = tf.keras.layers.concatenate([x.output, y.output, z.output])
-
-a = tf.keras.layers.Dense(20, activation="relu")(combined)
-a = tf.keras.layers.Dense(10, activation="relu")(a)
-a = tf.keras.layers.Dense(5, activation="softmax")(a)
+# Adam is chosen as an optimizer with an initial learning rate of 0.0001
 
 model = tf.keras.Model(inputs=[inputs],outputs=a)
-model.compile(optimizer='adam', loss="categorical_crossentropy", metrics="accuracy") #Loss überlegen.
+opt = tf.keras.optimizers.Adam(learning_rate=0.0001) # Default is 0.001
+model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
 model.summary()
 
 
+#for i in range(len(training_list)):
+training_dataset = tf.data.TFRecordDataset(args.training_data, buffer_size=1000000000)# tf.data.experimental.AUTOTUNE)
+test_dataset = tf.data.TFRecordDataset(args.test_data, buffer_size=1000000000)
 
-loaded = np.load('flatterrand_shift_sequences.npz')
+parsed_training_dataset = training_dataset.map(parse_record, num_parallel_calls=batch_size)
+parsed_test_dataset = test_dataset.map(parse_record, num_parallel_calls=batch_size)
+
+# Shuffle and batch the dataset
+training_dataset = parsed_training_dataset.shuffle(buffer_size=1000).batch(batch_size)
+training_dataset = training_dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+
+test_dataset = parsed_test_dataset.shuffle(buffer_size=1000).batch(batch_size)
+filepath = args.file_path +"/checkpoint-epoch-{epoch:02d}-{val_accuracy:.4f}-.hdf5"
+my_callbacks = [tf.keras.callbacks.ModelCheckpoint(filepath=filepath,save_weights_only=False,
+                                                    monitor='val_accuracy',save_best_only=True)]
 
 
-
-X = loaded['x']
-y = loaded['y']
-
-first_unit_sequence = X[0]
-first_unit_shift_sequence = y[0]
-
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-my_callbacks = [tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', min_delta=0.01, patience=3),
-                tf.keras.callbacks.ModelCheckpoint(filepath="Checkpoints-dir",save_weights_only=False,
-                                                   monitor='val_accuracy',save_best_only=True)]
-
-history = model.fit(X_train,y_train,validation_data=(X_test,y_test),batch_size=20,epochs=5,verbose=1,callbacks=my_callbacks)
-
-dot_img_file = 'C:/Users/mapap/.spyder-py3/model_flatterrand.png'
-tf.keras.utils.plot_model(model, to_file=dot_img_file, show_shapes=True)
-model.save('my_model.keras')  # The file needs to end with the .keras extension
-
+# Train the model
+history = model.fit(training_dataset,validation_data=(test_dataset), epochs=epochs, verbose=2, callbacks=my_callbacks)
 
 acc = history.history['accuracy']
 val_acc = history.history['val_accuracy']
 loss = history.history['loss']
 val_loss = history.history['val_loss']
 
-# Add curve to plot
-plt.plot(acc, label='Training accuracy')
-# Add curve to plot
-plt.plot(val_acc, label='Validation acc')
-plt.title('Training and validation accuracy')
-plt.legend()
-# Create first plot for content specified above
-plt.figure()
-plt.plot(loss, label='Training loss')
-plt.plot(val_loss, label='Validation loss')
-plt.title('Training and validation loss')
-plt.legend()
-# Create another plot and show all plots
-plt.show()
+np.save('acc_1B_10M.npy', acc)
+np.save('val_acc_1B_10M.npy', val_acc)
+np.save('loss_1B_10M.npy', loss)
+np.save('val_loss_1B_10M.npy', val_loss)
+
+model.save('1B_M10.keras')  # The file needs to end with the .keras extension
