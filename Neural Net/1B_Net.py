@@ -124,7 +124,6 @@ model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy
 model.summary()
 
 
-#for i in range(len(training_list)):
 training_dataset = tf.data.TFRecordDataset(args.training_data, buffer_size=1000000000)# tf.data.experimental.AUTOTUNE)
 test_dataset = tf.data.TFRecordDataset(args.test_data, buffer_size=1000000000)
 
