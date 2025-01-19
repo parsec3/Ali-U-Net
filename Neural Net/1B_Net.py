@@ -62,7 +62,7 @@ p4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(c4) # Output size 3x3x128
 
 c5 = tf.keras.layers.Conv2D(256, (3, 3), activation=act_fun, kernel_initializer=act_init, padding='same')(p4)
 c5 = tf.keras.layers.Dropout(0.3)(c5)
-c5 = tf.keras.layers.Conv2D(256, (3, 3), activation=act_fun, kernel_initializer=act_init, padding='same')(c5) #Output size is 3x3x256
+c5 = tf.keras.layers.Conv2D(256, (3, 3), activation=act_fun, kernel_initializer=act_init, padding='same')(c5) # Output size is 3x3x256
 
 #Expansive path
 u6 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c5) 
