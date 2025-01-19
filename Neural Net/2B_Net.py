@@ -2,150 +2,213 @@
 
 # -*- coding: utf-8 -*-
 """
-Created on Thu Aug 10 13:08:49 2023
+Created on Sun Jan 19 18:34:49 2023
 
 @author: Petar
 """
 
-#For the second alignment problem, we will produce an alignment that relies on gaps to work and then remove those gaps to unalign it. The net will have to transform the latter into the former. 
-#A lot of this code is the same as in the first alignment problem.
-
-import random
-import numpy as np
+import argparse
 import tensorflow as tf
+import numpy as np
+import os
+
+seed = 42
+np.random.seed = seed
+
+parser = argparse.ArgumentParser(description="Train the Ali-U-Net on simulated alignments.")
+
+parser.add_argument("rows", type=int,  help="The rows in the training data.")
+parser.add_argument("columns", type=int,  help="The columns in the training data.")
+parser.add_argument("activation", type=str, help="The activation function.")
+parser.add_argument("initialization", type=str, help="The initialization function.")
+parser.add_argument("training_data", type=str, help="The training dataset.")
+parser.add_argument("test_data", type=str, help="The test dataset.")
+parser.add_argument("file_path", type=str, help="The filepath.")
+
+args = parser.parse_args()
+
+act_fun = args.activation      # "sigmoid" OR "relu"
+act_init = args.initialization # "glorot_normal" OR "he_normal"
+
+rows = args.rows       # 48 OR 96
+columns = args.columns # 48 OR 96
+
+#Let's adapt the net to our model
+inputs = tf.keras.layers.Input(shape=(rows, columns, 5))
+
+#The below output sizes all assume '48' is chosen as a "rows" and as a "columns" argument.
+
+#Input 1
+
+#Contraction path
+c1 = tf.keras.layers.Conv2D(32, (2, 11), activation=act_fun, kernel_initializer=act_init, padding='same')(inputs) # Output size: 48x48x32
+c1 = tf.keras.layers.Dropout(0.1)(c1)
+c1 = tf.keras.layers.Conv2D(32, (2, 11), activation=act_fun, kernel_initializer=act_init, padding='same')(c1)
+p1 = tf.keras.layers.MaxPooling2D((2, 2))(c1) # Output size: 24x24x32
+
+c2 = tf.keras.layers.Conv2D(64, (2, 7), activation=act_fun, kernel_initializer=act_init, padding='same')(p1) # Output size: 24x24x64
+c2 = tf.keras.layers.Dropout(0.1)(c2)
+c2 = tf.keras.layers.Conv2D(64, (2, 7), activation=act_fun, kernel_initializer=act_init, padding='same')(c2)
+p2 = tf.keras.layers.MaxPooling2D((2, 2))(c2) # Output size: 12x12x64
+
+c3 = tf.keras.layers.Conv2D(128, (2, 5), activation=act_fun, kernel_initializer=act_init, padding='same')(p2) # Output size 12x12x128
+c3 = tf.keras.layers.Dropout(0.2)(c3)
+c3 = tf.keras.layers.Conv2D(128, (2, 5), activation=act_fun, kernel_initializer=act_init, padding='same')(c3)
+p3 = tf.keras.layers.MaxPooling2D((2, 2))(c3) # Output size 6x6x128
+
+c4 = tf.keras.layers.Conv2D(128, (2, 4), activation=act_fun, kernel_initializer=act_init, padding='same')(p3)
+c4 = tf.keras.layers.Dropout(0.2)(c4)
+c4 = tf.keras.layers.Conv2D(128, (2, 4), activation=act_fun, kernel_initializer=act_init, padding='same')(c4)
+p4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(c4) # Output size 3x3x128
+
+c5 = tf.keras.layers.Conv2D(256, (2, 3), activation=act_fun, kernel_initializer=act_init, padding='same')(p4)
+c5 = tf.keras.layers.Dropout(0.3)(c5)
+c5 = tf.keras.layers.Conv2D(256, (2, 3), activation=act_fun, kernel_initializer=act_init, padding='same')(c5) # Output size is 3x3x256
+
+#Expansive path
+u6 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c5)
+u6 = tf.keras.layers.concatenate([u6, c4])  # Output size is 6x6x256
+c6 = tf.keras.layers.Conv2D(128, (2, 4), activation=act_fun, kernel_initializer=act_init, padding='same')(u6)
+c6 = tf.keras.layers.Dropout(0.2)(c6)
+c6 = tf.keras.layers.Conv2D(128, (2, 4), activation=act_fun, kernel_initializer=act_init, padding='same')(c6)
+
+u7 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c6) # Output size is 12x12x128
+u7 = tf.keras.layers.concatenate([u7, c3])  # Output size is 12x12x256
+c7 = tf.keras.layers.Conv2D(128, (2, 5), activation=act_fun, kernel_initializer=act_init, padding='same')(u7)
+c7 = tf.keras.layers.Dropout(0.2)(c7)
+c7 = tf.keras.layers.Conv2D(128, (2, 5), activation=act_fun, kernel_initializer=act_init, padding='same')(c7)
+
+u8 = tf.keras.layers.Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c7) # Output size is 24x24x64
+u8 = tf.keras.layers.concatenate([u8, c2])  # Output size is 24x24x128
+c8 = tf.keras.layers.Conv2D(64, (2, 7), activation=act_fun, kernel_initializer=act_init, padding='same')(u8)
+c8 = tf.keras.layers.Dropout(0.1)(c8)
+c8 = tf.keras.layers.Conv2D(64, (2, 7), activation=act_fun, kernel_initializer=act_init, padding='same')(c8)
+
+u9 = tf.keras.layers.Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(c8) # Output size is 48x48x32
+u9 = tf.keras.layers.concatenate([u9, c1], axis=3)  # Output size is 48x48x64
+c9 = tf.keras.layers.Conv2D(32, (2, 11), activation=act_fun, kernel_initializer=act_init, padding='same')(u9)
+c9 = tf.keras.layers.Dropout(0.1)(c9)
+c9 = tf.keras.layers.Conv2D(32, (2, 11), activation=act_fun, kernel_initializer=act_init, padding='same')(c9) # Output size is 48x48x32
+
+outputs = tf.keras.layers.Conv2D(5, (1, 1), activation='sigmoid')(c9)
+
+y = tf.keras.Model(inputs=inputs,outputs=outputs)
+
+#Input 2
+
+#Contraction path
+c1 = tf.keras.layers.Conv2D(32, (11, 11), activation=act_fun, kernel_initializer=act_init, padding='same')(inputs) # Output size: 48x48x32
+c1 = tf.keras.layers.Dropout(0.1)(c1)
+c1 = tf.keras.layers.Conv2D(32, (11, 11), activation=act_fun, kernel_initializer=act_init, padding='same')(c1)
+p1 = tf.keras.layers.MaxPooling2D((2, 2))(c1) # Output size: 24x24x32
+
+c2 = tf.keras.layers.Conv2D(64, (7, 7), activation=act_fun, kernel_initializer=act_init, padding='same')(p1) # Output size: 24x24x64
+c2 = tf.keras.layers.Dropout(0.1)(c2)
+c2 = tf.keras.layers.Conv2D(64, (7, 7), activation=act_fun, kernel_initializer=act_init, padding='same')(c2)
+p2 = tf.keras.layers.MaxPooling2D((2, 2))(c2) # Output size: 12x12x64
+
+c3 = tf.keras.layers.Conv2D(128, (5, 5), activation=act_fun, kernel_initializer=act_init, padding='same')(p2) # Output size 12x12x128
+c3 = tf.keras.layers.Dropout(0.2)(c3)
+c3 = tf.keras.layers.Conv2D(128, (5, 5), activation=act_fun, kernel_initializer=act_init, padding='same')(c3)
+p3 = tf.keras.layers.MaxPooling2D((2, 2))(c3) # Output size 6x6x128
+
+c4 = tf.keras.layers.Conv2D(128, (4, 4), activation=act_fun, kernel_initializer=act_init, padding='same')(p3)
+c4 = tf.keras.layers.Dropout(0.2)(c4)
+c4 = tf.keras.layers.Conv2D(128, (4, 4), activation=act_fun, kernel_initializer=act_init, padding='same')(c4)
+p4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(c4) # Output size 3x3x128
+
+c5 = tf.keras.layers.Conv2D(256, (3, 3), activation=act_fun, kernel_initializer=act_init, padding='same')(p4)
+c5 = tf.keras.layers.Dropout(0.3)(c5)
+c5 = tf.keras.layers.Conv2D(256, (3, 3), activation=act_fun, kernel_initializer=act_init, padding='same')(c5) # Output size is 3x3x256
+
+#Expansive path
+u6 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c5)
+u6 = tf.keras.layers.concatenate([u6, c4])  # Output size is 6x6x256
+c6 = tf.keras.layers.Conv2D(128, (4, 4), activation=act_fun, kernel_initializer=act_init, padding='same')(u6)
+c6 = tf.keras.layers.Dropout(0.2)(c6)
+c6 = tf.keras.layers.Conv2D(128, (4, 4), activation=act_fun, kernel_initializer=act_init, padding='same')(c6)
+
+u7 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c6) # Output size is 12x12x128
+u7 = tf.keras.layers.concatenate([u7, c3])  # Output size is 12x12x256
+c7 = tf.keras.layers.Conv2D(128, (5, 5), activation=act_fun, kernel_initializer=act_init, padding='same')(u7)
+c7 = tf.keras.layers.Dropout(0.2)(c7)
+c7 = tf.keras.layers.Conv2D(128, (5, 5), activation=act_fun, kernel_initializer=act_init, padding='same')(c7)
+
+u8 = tf.keras.layers.Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c7) # Output size is 24x24x64
+u8 = tf.keras.layers.concatenate([u8, c2])  # Output size is 24x24x128
+c8 = tf.keras.layers.Conv2D(64, (7, 7), activation=act_fun, kernel_initializer=act_init, padding='same')(u8)
+c8 = tf.keras.layers.Dropout(0.1)(c8)
+c8 = tf.keras.layers.Conv2D(64, (7, 7), activation=act_fun, kernel_initializer=act_init, padding='same')(c8)
+
+u9 = tf.keras.layers.Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(c8) # Output size is 48x48x32
+u9 = tf.keras.layers.concatenate([u9, c1], axis=3)  # Output size is 48x48x64
+c9 = tf.keras.layers.Conv2D(32, (11, 11), activation=act_fun, kernel_initializer=act_init, padding='same')(u9)
+c9 = tf.keras.layers.Dropout(0.1)(c9)
+c9 = tf.keras.layers.Conv2D(32, (11, 11), activation=act_fun, kernel_initializer=act_init, padding='same')(c9) # Output size is 48x48x32
+
+outputs = tf.keras.layers.Conv2D(5, (1, 1), activation='sigmoid')(c9)
+
+z = tf.keras.Model(inputs=inputs,outputs=outputs)
+
+combined = tf.keras.layers.concatenate([y.output, z.output])
+
+a = tf.keras.layers.Dense(5, activation="softmax")(combined)
+
+from tensorflow.io import serialize_tensor, parse_tensor
+
+def parse_record(example):
+    print("parse_record_fn has been called.")
+    feature_description = {
+        'x': tf.io.FixedLenFeature([], tf.string),
+        'y': tf.io.FixedLenFeature([], tf.string),
+    }
+    example = tf.io.parse_single_example(example, feature_description)
+    x = tf.io.decode_raw(example['x'], tf.uint8)
+    y = tf.io.decode_raw(example['y'], tf.uint8)
+    x = tf.one_hot(x,5
+    y = tf.one_hot(y,5)
+    x = tf.reshape(x, (rows, columns, 5))  # Assuming the shape of your data
+    y = tf.reshape(y, (rows, columns, 5))   # Assuming the shape of your data
+    return x, y
+
+batch_size = 64
+epochs = 50
+
+# Create and compile the model
+
+model = tf.keras.Model(inputs=[inputs],outputs=a)
+opt = tf.keras.optimizers.Adam(learning_rate=0.0001) # Default is 0.001
+model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
+model.summary()
 
 
-def random_numbers_adding_up_100():
-  while True:
-      r1 = random.randint(10,100)
-      r2 = random.randint(10,100)
-      r3 = random.randint(10,100)
-      r4 = random.randint(10,100)
+training_dataset = tf.data.TFRecordDataset(args.training_data, buffer_size=1000000000)# tf.data.experimental.AUTOTUNE)
+test_dataset = tf.data.TFRecordDataset(args.test_data, buffer_size=1000000000)
 
-      s = (r1+r2+r3+r4)
+parsed_training_dataset = training_dataset.map(parse_record, num_parallel_calls=batch_size)
+parsed_test_dataset = test_dataset.map(parse_record, num_parallel_calls=batch_size)
 
-      r1 = r1/s
-      r2 = r2/s
-      r3 = r3/s
-      r4 = r4/s
+# Shuffle and batch the dataset
+training_dataset = parsed_training_dataset.shuffle(buffer_size=1000).batch(batch_size)
+training_dataset = training_dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 
-      yield (r1, r2, r3, r4)
-
-gen = random_numbers_adding_up_100()
-
-def DNA_profile(columns):
-  probabilities = [0.90,0.04,0.03,0.03]
-  profile=[]
-  for i in range(columns):
-    prob = random.sample(probabilities, len(probabilities)) #Shuffle around so that the spotlight is always on a different nucleotide.
-    profile+=[prob]
-  return profile
-
-nucleotides = ["A", "C", "G", "T"]
-probabilities = [0.90,0.04,0.03,0.03]
+test_dataset = parsed_test_dataset.shuffle(buffer_size=1000).batch(batch_size)
+filepath = args.file_path +"/checkpoint-epoch-{epoch:02d}-{val_accuracy:.4f}-.hdf5"
+my_callbacks = [tf.keras.callbacks.ModelCheckpoint(filepath=filepath,save_weights_only=False,
+                                                    monitor='val_accuracy',save_best_only=True)]
 
 
-def make_sequences(rows,columns):
-  profile = DNA_profile(columns)
-  sequences = []
-  for i in range(rows):
-    sequence = []
-    for i in range(columns):
-      sequence += random.choices(nucleotides, weights=profile[i], k=1)
-    sequences += [sequence]
-  sequences = np.array(sequences)
-  return sequences
+# Train the model
+history = model.fit(training_dataset,validation_data=(test_dataset), epochs=epochs, verbose=2, callbacks=my_callbacks)
 
-sequences = make_sequences(96,96)
+acc = history.history['accuracy']
+val_acc = history.history['val_accuracy']
+loss = history.history['loss']
+val_loss = history.history['val_loss']
 
-def recode_seq(seq): #This one is for recoding everything.
-  seq_len = len(seq)
-  a = np.empty(shape=(seq_len), dtype=np.uint8)
-  for i, c in enumerate(seq):
-    if (c == 'A'):
-      a[i] = 0
-    elif (c == 'C'):
-      a[i] = 1
-    elif (c == 'G'):
-      a[i] = 2
-    elif (c == 'T'):
-      a[i] = 3
-    elif (c == '-'):
-      a[i] = 4
-  return a
+np.save('acc_2B_10M.npy', acc)
+np.save('val_acc_2B_10M.npy', val_acc)
+np.save('loss_2B_10M.npy', loss)
+np.save('val_loss_2B_10M.npy', val_loss)
 
-recoded_seq = []
-for i in range(sequences.shape[0]):
-  recoded_seq += [recode_seq(sequences[i])]
-
-recoded_seq = np.array(recoded_seq)
-
-growth_options = [-3,-2,-1,0,1,2,3]
-growth_probabilities = [0.06,0.06,0.06,0.64,0.06,0.06,0.06]
-
-
-def add_gaps(rows,columns):
-  while True:
-          sequence_array = make_sequences(rows,columns) #We generate a fully aligned matrix of 96 almost-identical sequences. It becomes a blueprint for both the aligned and unaligned seq.
-          gap_size = 6 #Ground pattern for all the gaps
-          gap_site = int(columns/4) #Gap position to the left of the middle
-          gap_site2 = int(3*columns/4) #Gap position to the right of the middle.
-          sequences = [] #This is the aligned case
-          shift_sequences = [] #This is the unaligned case
-          for i in range(rows):
-              sequence = list(sequence_array[i])
-              shift_sequence = list(sequence_array[i])
-              skip = random.choices(range(rows),k=5)
-              if i in skip:  #We'll add a few gapless sequences to explain why the other sequences need gaps at all.
-                sequence = ''.join(sequence)
-                shift_sequence = ''.join(shift_sequence)
-                sequences += [sequence]
-                shift_sequences += [shift_sequence]
-                continue
-              right_margin = random.randint(0,gap_size) #We create a margin to the left and right where nucleotides are replaced with gaps. It's meant to give the sequences their "ragged" look
-              left_margin = random.randint(0,gap_size) #The margin's size is always random, but it varies from between 0 to 6 in each run.
-              #List 'a' stores values (e.g. [-1, 1, 2, 0]) that can grow or shrink a given gap sequence, depending on if they are positive or negative. They are added or subtracted from the indices below that decide which nucleotides are overwritten and which not.
-              a = random.choices(growth_options, weights=growth_probabilities, k=4)
-              total_margin = left_margin + right_margin + gap_size*2 + sum(a)
-              sequence = ['-'] * left_margin + sequence[left_margin:] #This is the aligned sequence where the left margin is created.
-              sequence = sequence[:columns-right_margin] + ['-'] * right_margin #Now, for the right margin of the aligned sequence.
-              #What happens here is that the list is being sliced. One slice consists of all the nucleotides to the left of the gap site. Then, we get gaps equal to the gap size plus all the nucleotides to the right of the gap.
-              sequence = sequence[:gap_site-a[0]] + ['-'] * (gap_size+a[0]+a[1]) + sequence[gap_site+a[1]+gap_size:]
-              sequence = sequence[:gap_site2-a[2]] + ['-'] * (gap_size+a[2]+a[3]) + sequence[gap_site2+a[3]+gap_size:]
-              del shift_sequence[0:left_margin] #The unaligned sequence has no left margin. Here, all nucleotides start in the same place. Where the aligned sequence has gaps, it has nothing.
-              del shift_sequence[(gap_site-a[0]-left_margin):(gap_site+a[1]+gap_size-left_margin)] #Whenever we delete nucleotides, we move the index to the left, so, when we need to delete more, we need to move the index according to the preceding rows. Only that way, we make sure we are deleting the right nucleotides so that both alignments have the same letters.
-              del shift_sequence[(gap_site2-a[2]-a[0]-a[1]-left_margin-gap_size):(gap_site2+a[3]-a[0]-a[1]-left_margin)]
-              shift_sequence = shift_sequence[:columns-total_margin] + ['-'] * total_margin #The unaligned sequence has a right margin to make sure it's as wide as the aligned one.
-              sequence = ''.join(sequence)
-              shift_sequence = ''.join(shift_sequence)
-              sequences += [sequence]
-              shift_sequences += [shift_sequence]
-          sequences = np.array(sequences)
-          shift_sequences = np.array(shift_sequences)
-          yield sequences, shift_sequences
-
-gap_sequence = add_gaps(96,96)
-
-def add_unit_gaps(sequence_array): #Now for the unit vector.
-        sequences = [] #Build the array new.
-        for i in range(sequence_array.shape[0]): #Loops through all the rows of the array.
-            sequence = list(sequence_array[i]) #Access the rows individually.
-            seq = recode_seq(sequence)
-            seq = tf.keras.utils.to_categorical(seq, num_classes=5, dtype='uint8') #The extra class is necessary; we have four nucleotides + a gap.
-            sequences += [seq]
-        sequences = np.array(sequences)
-        return sequences
-
-gap_sequences, shift_gap_sequences = next(gap_sequence)
-
-train_no_shift = np.empty((50000,96,96,5),dtype='uint8')
-train_shift = np.empty((50000,96,96,5),dtype='uint8')
-
-for i in range(50000):
-  gap_sequences, shift_gap_sequences = next(gap_sequence)
-  unit_gap_seq = add_unit_gaps(gap_sequences)
-  unit_shift_gap_seq = add_unit_gaps(shift_gap_sequences)
-  train_no_shift[i] = unit_gap_seq
-  train_shift[i] = unit_shift_gap_seq
-
-np.savez_compressed('flatterrand_shift_sequences.npz',x=train_shift, y=train_no_shift)
+model.save('2B_M10.keras')  # The file needs to end with the .keras extension
