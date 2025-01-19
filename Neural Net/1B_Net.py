@@ -11,7 +11,6 @@ Created on Sun Jan 19 17:57:56 2025
 import argparse
 import tensorflow as tf
 import numpy as np
-import os
 
 seed = 42
 np.random.seed = seed
@@ -93,7 +92,7 @@ c9 = tf.keras.layers.Conv2D(32, (11, 11), activation=act_fun, kernel_initializer
 
 outputs = tf.keras.layers.Conv2D(5, (1, 1), activation='sigmoid')(c9)
 
-a = tf.keras.layers.Dense(5, activation="softmax")(outputs)
+a = tf.keras.layers.Conv2D(5, (1, 1), activation='softmax')(outputs)
 
 from tensorflow.io import serialize_tensor, parse_tensor
 
