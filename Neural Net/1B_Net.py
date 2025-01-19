@@ -84,7 +84,7 @@ c8 = tf.keras.layers.Dropout(0.1)(c8)
 c8 = tf.keras.layers.Conv2D(64, (7, 7), activation=act_fun, kernel_initializer=act_init, padding='same')(c8)
 
 u9 = tf.keras.layers.Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(c8)  # Output size is 48x48x32
-u9 = tf.keras.layers.concatenate([u9, c1], axis=3) # Output size is 48x48
+u9 = tf.keras.layers.concatenate([u9, c1], axis=3) # Output size is 48x48x64
 c9 = tf.keras.layers.Conv2D(32, (11, 11), activation=act_fun, kernel_initializer=act_init, padding='same')(u9)
 c9 = tf.keras.layers.Dropout(0.1)(c9)
 c9 = tf.keras.layers.Conv2D(32, (11, 11), activation=act_fun, kernel_initializer=act_init, padding='same')(c9) # Output size is 48x48x32
