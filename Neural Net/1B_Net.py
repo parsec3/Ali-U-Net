@@ -37,6 +37,8 @@ columns = args.columns # 48 OR 96
 #Let's adapt the net to our model
 inputs = tf.keras.layers.Input(shape=(rows, columns, 5))
 
+#The below output sizes all assume '48' is chosen as a "rows" and as a "columns" argument.
+
 # Contraction path
 c1 = tf.keras.layers.Conv2D(32, (11, 11), activation=act_fun, kernel_initializer=act_init, padding='same')(inputs) # Output size: 48x48x32
 c1 = tf.keras.layers.Dropout(0.1)(c1)
