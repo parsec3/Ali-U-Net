@@ -152,7 +152,7 @@ z = tf.keras.Model(inputs=inputs,outputs=outputs)
 
 combined = tf.keras.layers.concatenate([y.output, z.output])
 
-a = tf.keras.layers.Dense(5, activation="softmax")(combined)
+a = tf.keras.layers.Conv2D(5, (1, 1), activation='softmax')(combined)
 
 from tensorflow.io import serialize_tensor, parse_tensor
 
