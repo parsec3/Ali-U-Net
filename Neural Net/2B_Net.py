@@ -165,8 +165,8 @@ def parse_record(example):
     example = tf.io.parse_single_example(example, feature_description)
     x = tf.io.decode_raw(example['x'], tf.uint8)
     y = tf.io.decode_raw(example['y'], tf.uint8)
-    x = tf.one_hot(x,5
-    y = tf.one_hot(y,5)
+    x = tf.one_hot(x, 5)
+    y = tf.one_hot(y, 5)
     x = tf.reshape(x, (rows, columns, 5))  # Assuming the shape of your data
     y = tf.reshape(y, (rows, columns, 5))   # Assuming the shape of your data
     return x, y
