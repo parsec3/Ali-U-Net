@@ -1,5 +1,3 @@
-#!/bin/bash     #Shebang
-
 conda activate tf
 
 
