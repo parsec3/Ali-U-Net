@@ -1,12 +1,4 @@
-#!/bin/bash     #Shebang
-#
-#$ -cwd         #Execute job from current directory
-#$ -S /bin/bash #Interpeting shell for the job
-#$ -j n         #Do not join stdout and stderr
-#$ -N jobname       #Name of the job
-#$ -m n
-#$ -q fast.q
-
+##Job settings
 
 conda activate biotool
 
