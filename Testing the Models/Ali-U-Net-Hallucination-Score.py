@@ -29,7 +29,7 @@ def make_predict_sequences(pred_array):
 loaded = np.load('filename.npz')
 
 def calculate_pairwise_identity(seq1, seq2):
-    alignment = pairwise2.align.globalxx(seq1, seq2, one_alignment_only=True)[0]
+    alignment = pairwise2.align.globalms(seq1, seq2, 1, 0, -2, -1, one_alignment_only=True)[0]
     identical_positions = sum(1 for s1, s2 in zip(*alignment[:2]) if s1 != '-' and s1 == s2)
     total_positions = sum(1 for s1, s2 in zip(*alignment[:2]) if s1 != '-' or s2 != '-')
     identity_score = identical_positions / total_positions
