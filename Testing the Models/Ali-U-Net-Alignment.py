@@ -6,7 +6,7 @@ import tensorflow as tf
 import os
 import argparse
 
-#Besides the usual packages, we also want to clock the time
+#Tracking time
 
 import time
 start = time.time()
@@ -68,28 +68,19 @@ def make_predict_sequences(pred_array):
 seed = 42
 np.random.seed = seed
 
-parser = argparse.ArgumentParser(description="Train a neural network on the 96x96 net with internal gaps.")
+parser = argparse.ArgumentParser(description="Load the model.")
 
 parser.add_argument("rows", type=int,  help="The rows in the training data.")
 parser.add_argument("columns", type=int,  help="The columns in the training data.")
-parser.add_argument("activation", type=str, help="The activation function.")
-parser.add_argument("initialization", type=str, help="The initialization function.")
+parser.add_argument("model_path", type=str,  help="The path to the model file.")
 
 args = parser.parse_args()
 
-act_fun = args.activation
-act_init = args.initialization
 rows = args.rows       # 48 OR 96
 columns = args.columns # 48 OR 96
+model_path = args.model_path
 
-#Let's adapt the net to our model
-inputs = tf.keras.layers.Input(shape=(rows, columns, 5))
-
-###[Architecture of the neural net to be loaded.]
-
-model = tf.keras.Model(inputs=[inputs],outputs=a)
-
-model.load_weights('filepath/to/model-checkpoint-epoch-x-weight-y-.hdf5')
+model = tf.keras.models.load_model(model_path)
 
 Accuracy_List = []
 seq_num = 0
@@ -120,15 +111,13 @@ for i in range(1, 1001):
     list_seq = prediction
     list_name = []
 
-    with open(f"filepath/to/aligned_shift_sequences_96_{i}.fasta", "w") as ofile:
+    with open(f"filepath/to/aligned_sequences_{i}.fasta", "w") as ofile:
         for t, seq in enumerate(list_seq):
             number = t + 1
             element = f"Seq{number}"
             list_name.append(element)
             # Write FASTA format: header and sequence
             ofile.write(f">{element}\n{seq}\n")
-
-#This is used as an additional means to clock time, along with bash specific commands.
 
 end = time.time()
 print(end - start)
