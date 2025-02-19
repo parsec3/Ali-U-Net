@@ -148,9 +148,9 @@ val_acc = history.history['val_accuracy']
 loss = history.history['loss']
 val_loss = history.history['val_loss']
 
-np.save('acc_1B_10M.npy', acc)
-np.save('val_acc_1B_10M.npy', val_acc)
-np.save('loss_1B_10M.npy', loss)
-np.save('val_loss_1B_10M.npy', val_loss)
+np.save('acc_B1_10M.npy', acc)
+np.save('val_acc_B1_10M.npy', val_acc)
+np.save('loss_B1_10M.npy', loss)
+np.save('val_loss_B1_10M.npy', val_loss)
 
-model.save('1B_M10.keras')  # The file needs to end with the .keras extension
+model.save('Ali-U-Net_B1_10M.h5', save_format='h5')  # Adjust filename based on study case, e.g. Ali-U-Net_48x48_RSE-IG_B1_10M.h5
