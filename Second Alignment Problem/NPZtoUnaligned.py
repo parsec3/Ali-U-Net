@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 
-#This code converts our simulated data into FASTA files (which are the standard in bioinformatics).
+#This code converts our simulated npz data into FASTA files (which are the standard in bioinformatics).
 
 
 import numpy as np
