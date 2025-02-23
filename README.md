@@ -23,7 +23,8 @@ conda create --name name_of_the_environment tensorflow
 ```
 
 ## Creating training, validation and test datasets for the different study cases
-Creating train, validation and test datasets for the RSE (Ragged sequence ends) study case:
+Creating train, validation and test datasets for the RSE (Ragged sequence ends) study case.
+The python scripts for the simulations can be found in the xx folder.
 ```
 python3 AliSim_RSE.py 48 48 5 3 10000000 48RSE_train.tfr2 #Training data
 python3 AliSim_RSE.py 48 48 5 3 1000     48RSE_val.tfr2   #Validation data
