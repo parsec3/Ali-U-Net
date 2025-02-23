@@ -10,7 +10,6 @@ Created on Sun Jan 19 18:34:49 2023
 import argparse
 import tensorflow as tf
 import numpy as np
-import os
 
 seed = 42
 np.random.seed = seed
