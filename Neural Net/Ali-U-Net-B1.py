@@ -23,7 +23,8 @@ parser.add_argument("activation", type=str, help="The activation function.")
 parser.add_argument("initialization", type=str, help="The initialization function.")
 parser.add_argument("training_data", type=str, help="The training dataset.")
 parser.add_argument("test_data", type=str, help="The test dataset.")
-parser.add_argument("file_path", type=str, help="The filepath.")
+parser.add_argument("file_path", type=str, help="The file path for the checkpoint file.")
+parser.add_argument("file_name", type=str, help="The file name for the trained h5 model.")
 
 args = parser.parse_args()
 
@@ -153,4 +154,4 @@ np.save('val_acc_B1_10M.npy', val_acc)
 np.save('loss_B1_10M.npy', loss)
 np.save('val_loss_B1_10M.npy', val_loss)
 
-model.save('Ali-U-Net_B1_10M.h5', save_format='h5')  # Adjust filename based on study case, e.g. Ali-U-Net_48x48_RSE-IG_B1_10M.h5
+model.save(args.file_name, save_format='h5')
