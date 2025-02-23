@@ -22,6 +22,25 @@ and the following commands:
 conda create --name name_of_the_environment tensorflow
 ```
 
+## Creating training, validation and test datasets for the different study cases
+
+```
+Code here 
+```
+
+## Training the neural network
+
+```
+Code here 
+```
+
+## Using trained neural networks for predicting alignments
+Trained neural networks can be downloaded from the Zenodo repository xxx.
+
+```
+Code here 
+```
+
 ## Authors:
 Petar Arsic [(Leibniz Institute for the Analysis of Biodiversity Change, Bonn)](https://bonn.leibniz-lib.de/de/forschung)\
 Christoph Mayer [(Leibniz Institute for the Analysis of Biodiversity Change, Bonn)](https://bonn.leibniz-lib.de/de/forschung)
@@ -29,6 +48,4 @@ Christoph Mayer [(Leibniz Institute for the Analysis of Biodiversity Change, Bon
 ## Reference: When using the Ali-U-Net, please cite:
 REF
 
-## Trained neural networks can be downloaded from:
-REF
 
