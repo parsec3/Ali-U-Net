@@ -22,7 +22,7 @@ and the following commands:
 conda create --name name_of_the_environment tensorflow
 ```
 
-## Creating training, validation, and test datasets for the different study cases
+## Creating training, validation, and test datasets for the six study cases in the publication Arsic and Mayer 2025.
 Creating train, validation, and test datasets for the RSE (Ragged sequence ends) study case.
 The Python scripts for the simulations can be found in the "Simulate Alignment Generator" folder. Each script takes the following arguments in this order:
 columns rows margin_size skipped_rows number_of_alignments file_name
@@ -52,7 +52,7 @@ python3 AliSim_RSE_mixed.py 96 96 7 1 5 1000     96RSE-mixed_val.tfr2
 python3 AliSim_RSE_mixed.py 96 96 7 1 5 1000     96RSE-mixed_val.tfr2
 ```
 
-## Training the neural network
+## Training neural networks
 The neural network-scripts can be found in the "Neural Net" folder and they take the following arguments:
 rows columns activation_function initializer training_file validation_file checkpoint_file_path file_name
 Here is how this looks for the 48x48 RSE study case (see the "job_train_net.sh" file in the "Neural Net" folder for the other examples:
