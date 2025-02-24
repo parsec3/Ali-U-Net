@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jan  17 21:32:38 2025
-
-@author: Petar
-"""
-
 import argparse
 import random
 import numpy as np
