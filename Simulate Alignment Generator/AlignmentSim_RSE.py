@@ -1,12 +1,3 @@
-#!/usr/bin/env python3
-
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jan 17 21:20:18 2025
-
-@author: Petar
-"""
-
 import argparse
 import random
 import numpy as np
