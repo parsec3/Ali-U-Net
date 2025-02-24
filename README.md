@@ -70,10 +70,10 @@ python Ali-U-Net-B3.py 48 48 sigmoid glorot_normal 48RSE_train.tfr2 48RSE_val.tf
 ## Using trained neural networks for predicting alignments
 Trained neural networks can be downloaded from the Zenodo repository xxx.
 The script can be found in the "Testing the Models" folder and it takes the following arguments:
-rows columns filepath_to_the_model
-Here an example for loading the Ali-U-Net_48x48_RSE-IG_B3_10M.h5 model:
+rows columns filepath_to_the_model input_file output_file
+Here an example for loading the Ali-U-Net_48x48_RSE-B1_10M.h5 model:
 ```
-python3 Ali-U-Net-Alignment.py 48 48 Ali-U-Net_48x48_RSE-IG_B3_10M.h5
+python3 Ali-U-Net-Alignment.py 48 48 Ali-U-Net_48x48_RSE-B1_10M.h5 48_RSE_test_x 48_RSE_test_y
 ```
 
 ## Authors:
