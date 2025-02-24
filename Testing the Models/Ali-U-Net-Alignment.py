@@ -72,13 +72,17 @@ parser = argparse.ArgumentParser(description="Load the model.")
 
 parser.add_argument("rows", type=int,  help="The rows in the training data.")
 parser.add_argument("columns", type=int,  help="The columns in the training data.")
-parser.add_argument("model_path", type=str,  help="The path to the model file.")
+parser.add_argument("model", type=str,  help="The model file.")
+parser.add_argument("input_file", type=str,  help="The input file.")
+parser.add_argument("output_file", type=str,  help="The output file.")
 
 args = parser.parse_args()
 
 rows = args.rows       # 48 OR 96
 columns = args.columns # 48 OR 96
-model_path = args.model_path
+model_path = args.model
+input_file = args.input_file
+output_file = args.output_file
 
 model = tf.keras.models.load_model(model_path)
 
@@ -89,7 +93,7 @@ for i in range(1, 1001):
     unaligned_seq = []
 
     # Open and read the FASTA file manually
-    with open(f"filepath/to/unaligned_sequences_{i}.fasta", "r") as handle:
+    with open(input_file+f"_{i}.fasta", "r") as handle:
         lines = handle.readlines()
         for line in lines:
             line = line.strip()
@@ -111,7 +115,7 @@ for i in range(1, 1001):
     list_seq = prediction
     list_name = []
 
-    with open(f"filepath/to/aligned_sequences_{i}.fasta", "w") as ofile:
+    with open(output+f"_{i}.fasta", "w") as ofile:
         for t, seq in enumerate(list_seq):
             number = t + 1
             element = f"Seq{number}"
