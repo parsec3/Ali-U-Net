@@ -113,7 +113,7 @@ for i in range(1, 1001):
     list_seq = prediction
     list_name = []
 
-    with open(output+f"_{i}.fasta", "w") as ofile:
+    with open(output_file+f"_{i}.fasta", "w") as ofile:
         for t, seq in enumerate(list_seq):
             number = t + 1
             element = f"Seq{number}"
