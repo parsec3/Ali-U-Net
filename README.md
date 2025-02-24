@@ -77,8 +77,8 @@ python3 Ali-U-Net-Alignment.py 48 48 Ali-U-Net_48x48_RSE-IG_B3_10M.h5
 ```
 
 ## Authors:
-Petar Arsic [(Leibniz Institute for the Analysis of Biodiversity Change, Bonn)](https://bonn.leibniz-lib.de/de/forschung)\
-Christoph Mayer [(Leibniz Institute for the Analysis of Biodiversity Change, Bonn)](https://bonn.leibniz-lib.de/de/forschung)
+[Petar Arsic](https://bonn.leibniz-lib.de/de/forschung)\
+[Christoph Mayer](https://leibniz-lib.de/de/ueber-das-lib/mitarbeitende/christoph-mayer.html)
 
 ## Reference: When using the Ali-U-Net, please cite:
 REF
