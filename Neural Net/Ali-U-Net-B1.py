@@ -1,13 +1,3 @@
-#!/usr/bin/env python3
-
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Jan 19 17:57:56 2025
-
-@author: Petar
-"""
-
-
 import argparse
 import tensorflow as tf
 import numpy as np
