@@ -3,6 +3,21 @@ import numpy as np
 from statistics import median, mean
 import argparse
 
+parser = argparse.ArgumentParser(description="Load the model.")
+
+parser.add_argument("rows", type=int,  help="The rows in the training data.")
+parser.add_argument("columns", type=int,  help="The columns in the training data.")
+parser.add_argument("file", help="Path to tfrecord file file.")
+parser.add_argument("aligned_file", type=str,  help="The aligned fasta file produced by the Ali-U-Net.")
+
+args = parser.parse_args()
+
+rows = args.rows
+columns = args.columns
+filename = args.file
+aligned_file = args.aligned_file
+
+
 nucleotide = ["A", "C", "G", "T", "-"]
 
 # Function to parse a FASTA file without using BioPython
@@ -44,8 +59,8 @@ def parse_tfrecord_fn(example):
     example = tf.io.parse_single_example(example, feature_description)
     x = tf.io.decode_raw(example['x'], tf.int8)
     y = tf.io.decode_raw(example['y'], tf.int8)
-    x = tf.reshape(x, (48, 48))  # Assuming the shape of your data
-    y = tf.reshape(y, (48, 48))   # Assuming the shape of your data
+    x = tf.reshape(x, (rows, columns))  # Assuming the shape of your data
+    y = tf.reshape(y, (rows, columns))   # Assuming the shape of your data
     return x, y
 
 def get_ref_alignment(data,N):
@@ -108,16 +123,6 @@ def calculate_column_score(sequences1, sequences2):
     column_score = (identical_columns / num_columns) * 100
     return column_score
 
-parser = argparse.ArgumentParser(description="Load the model.")
-
-parser.add_argument("file", help="Path to tfrecord file file.")
-parser.add_argument("aligned_file", type=str,  help="The aligned fasta file produced by the Ali-U-Net.")
-
-args = parser.parse_args()
-
-filename = args.file
-filename = args.aligned_file
-
 # Create a TFRecordDataset
 dataset = tf.data.TFRecordDataset(filename, buffer_size=1000000)
 
@@ -132,14 +137,14 @@ Accuracy_List3 = []
 for i in range(1, 1001):
     ref_aligned_seq  = parsed_ref_aligned_seq[i-1]
 
-    AliU_aligned_seq = parse_fasta(aligned_file+f"_{i}.fasta")
+    AliU_aligned_seq = parse_fasta(aligned_file+f"_{i}.fas")
 
     accurate_hits = 0
     inaccurate_hits = 0
 
     for n, u in enumerate(AliU_aligned_seq):
         pred_seq = ''
-        nucl1 = list(u)
+        nucl1 = list(u:columns)
         nucl2 = list(ref_aligned_seq[n])
         for m, v in enumerate(nucl1):
             if v == nucl2[m]:
