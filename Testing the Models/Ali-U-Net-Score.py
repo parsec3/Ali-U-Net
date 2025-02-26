@@ -144,7 +144,7 @@ for i in range(1, 1001):
 
     for n, u in enumerate(AliU_aligned_seq):
         pred_seq = ''
-        nucl1 = list(u:columns)
+        nucl1 = list(u)[0:columns]
         nucl2 = list(ref_aligned_seq[n])
         for m, v in enumerate(nucl1):
             if v == nucl2[m]:
