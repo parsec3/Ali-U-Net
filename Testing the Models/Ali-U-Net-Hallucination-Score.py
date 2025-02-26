@@ -4,29 +4,90 @@ import tensorflow as tf
 from Bio import pairwise2
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from Bio import SeqIO
+from  Bio import SeqIO
 from statistics import median, mean
+import argparse
+
+parser = argparse.ArgumentParser(description="Load the model.")
+
+parser.add_argument("rows", type=int, help="The rows in the training data.")
+parser.add_argument("columns", type=int, help="The columns in the training data.")
+parser.add_argument("file", help="Path to tfrecord file file.")
+parser.add_argument("aligned_file", type=str, help="The aligned fasta file produced by the Ali-U-Net.")
+
+args = parser.parse_args()
+
+rows = args.rows
+columns = args.columns
+filename = args.file
+aligned_file = args.aligned_file
 
 nucleotide = ["A", "C", "G", "T", "-"]
 
+# Function to parse a FASTA file without using BioPython
+def parse_fasta(file_path):
+    sequences = []
+    with open(file_path, 'r') as file:
+        sequence = ''
+        for line in file:
+            line = line.strip()
+            if line.startswith(">"):
+                if sequence:
+                    sequences.append(sequence.upper())
+                    sequence = ''
+            else:
+                sequence += line
+        if sequence:
+            sequences.append(sequence.upper())
+    return sequences
 
-def make_predict_sequences(pred_array):
-  sequences = []
-  rows = pred_array.shape[0]
-  columns = pred_array.shape[1]
-  for i in range(rows):
-    weight_profile = pred_array[i]
-    sequence = []
-    for j in range(columns):
-     probs = list(weight_profile[j])
-     position =  probs.index(max(probs))
-     sequence += nucleotide[position]
-    sequence = ''.join(sequence)  ##I'll keep this as an on/off-switch in case we need the raw letters.
-    sequences += [sequence]
-  sequences = np.array(sequences)
-  return sequences
+def num_to_string(pred_array):
+    sequences = []
+    rows = pred_array.shape[0]
+    columns = pred_array.shape[1]
+    for i in range(rows):
+        sequence = []
+        for j in pred_array[i]:
+            sequence += nucleotide[j]
+        sequence = ''.join(sequence) ##I'll keep this as an on/off-switch in case we need the raw letters.
+        sequences += [sequence]
+    sequences = np.array(sequences)
+    return sequences
 
-loaded = np.load('filename.npz')
+def parse_tfrecord_fn(example):
+    print("parse_tfrecord_fn has been called.")
+    feature_description = {
+        'x': tf.io.FixedLenFeature([], tf.string),
+        'y': tf.io.FixedLenFeature([], tf.string),
+    }
+    example = tf.io.parse_single_example(example, feature_description)
+    x = tf.io.decode_raw(example['x'], tf.int8)
+    y = tf.io.decode_raw(example['y'], tf.int8)
+    x = tf.reshape(x, (rows, columns)) # Assuming the shape of your data
+    y = tf.reshape(y, (rows, columns)) # Assuming the shape of your data
+    return x, y
+
+def get_unaligned_reference(data,N):
+    count = 0
+    unaligned_sequences = []
+    for x_data, y_data in data:
+        unaligned_sequences += [num_to_string(x_data.numpy())]
+        count += 1
+        if count == N:
+            break
+    x_seq = []
+    for x in unaligned_sequences:
+        list_x = []
+        for b in x:
+            list_x += [b]
+        x_seq += [list_x]
+    return x_seq
+
+# Create a TFRecordDataset
+dataset = tf.data.TFRecordDataset(filename, buffer_size=1000000)
+# Map the parse function to the dataset
+parsed_dataset = dataset.map(parse_tfrecord_fn).prefetch(100)
+parsed_unaligned_seq = get_unaligned_reference(parsed_dataset,1000)
 
 def calculate_pairwise_identity(seq1, seq2):
     alignment = pairwise2.align.globalms(seq1, seq2, 1, 0, -2, -1, one_alignment_only=True)[0]
@@ -49,35 +110,19 @@ def gapless_sequence(sequence):
     shifted_sequence = ''.join(parts)
     return shifted_sequence
 
-
-x = loaded['x']
-y = loaded['y']
-
 Accuracy_List = []
 
-
 for i in range(1,1001):
-    first_unit_sequence = x[i-1]
-    first_unit_shift_sequence = y[i-1]
-    first_sequence = make_predict_sequences(first_unit_sequence)
-    first_shift_sequence = make_predict_sequences(first_unit_shift_sequence)
-    gapless_seq = []
+    unaligned_seq = parsed_unaligned_seq[i-1] #x
 
-    handle = open(r"aligned_sequence_name_{}.fasta".format(i))
-    for seq_record_al in SeqIO.parse(handle, "fasta"):
-        seq = str(seq_record_al.seq)
-        gapless = gapless_sequence(seq.upper())
-        gapless_seq += [gapless]
-    handle.close()
+    gapless_seq = parse_fasta(aligned_file+f"_{i}.fasta")
 
     identity_gapless = []
     for n, u in enumerate(gapless_seq):
-      identity_score = calculate_pairwise_identity(u,first_sequence[n])
+      identity_score = calculate_pairwise_identity(u,unaligned_seq[n])
       identity_score = identity_score * 100
       identity_gapless += [identity_score]
     Accuracy_List.append(mean(identity_gapless))
-
-
 
 themean = 100 - mean(Accuracy_List)
 themedian = 100 - median(Accuracy_List)
