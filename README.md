@@ -71,8 +71,8 @@ python Ali-U-Net-B3.py 48 48 sigmoid glorot_normal 48RSE_train.tfr2 48RSE_val.tf
 Trained neural networks can be downloaded from the Zenodo repository xxx.
 The script can be found in the "Testing the Models" folder and it takes the following arguments:
 rows columns filepath_to_the_model input_file output_file
-Important: The input and output files have a name format of filename + number + ".fas", e.g. 48_RSE_test_x_3.fas
-When giving the arguments to the model, it is important to only give the base name, as the script will add the number and the file name extension (e.g. 48_RSE_test_x rather than 48_RSE_test_x_3.fas).
+Important: The input and output files have a name format of filename + number + ".fas", e.g. 48_RSE_test_y_3.fas
+When giving the arguments to the model, it is important to only give the base name, as the script will add the number and the file name extension (e.g. 48_RSE_test_y rather than 48_RSE_test_y_3.fas).
 Here an example for loading the Ali-U-Net_48x48_RSE-relu_B1_10M.h5 model:
 ```
 python3 Ali-U-Net-Alignment.py 48 48 Ali-U-Net_48x48_RSE-relu_B1_10M.h5 48_RSE_test_x 48_RSE_test_y
