@@ -8,8 +8,8 @@ import sys
 
 parser = argparse.ArgumentParser(description="Train a neural network on the 48x48 net with internal gaps.")
 
-parser.add_argument("columns", type=int, help="The number of columns.")
 parser.add_argument("rows", type=int, help="The number of rows.")
+parser.add_argument("columns", type=int, help="The number of columns.")
 parser.add_argument("margin", type=int, help="The margin size.")
 parser.add_argument("gap_prob", type=int, help="The gap probability distribution (if the input is '0', the first distribution is chosen, if it is '1', the second is chosen.")
 parser.add_argument("skip_rows", type=int, help="The number of rows to be left without gaps.")
