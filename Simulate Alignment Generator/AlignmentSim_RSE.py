@@ -9,8 +9,8 @@ import sys
 
 parser = argparse.ArgumentParser(description="Simulate a study case without internal gaps.")
 
-parser.add_argument("columns", type=int, help="The number of columns.")
 parser.add_argument("rows", type=int, help="The number of rows.")
+parser.add_argument("columns", type=int, help="The number of columns.")
 parser.add_argument("margin", type=int, help="The margin size.")
 parser.add_argument("skip_rows", type=int, help="The number of rows to be left without gaps.")
 parser.add_argument("alignments", type=int, help="The number of alignments.")
