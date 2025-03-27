@@ -58,7 +58,7 @@ c5 = tf.keras.layers.Conv2D(256, (3, 2), activation=act_fun, kernel_initializer=
 
 #Expansive path
 u6 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c5)
-u6 = tf.keras.layers.concatenate([u6, c4]) # Output size is 6x6x128
+u6 = tf.keras.layers.concatenate([u6, c4]) # Output size is 6x6x256
 c6 = tf.keras.layers.Conv2D(128, (4, 2), activation=act_fun, kernel_initializer=act_init, padding='same')(u6)
 c6 = tf.keras.layers.Dropout(0.2)(c6)
 c6 = tf.keras.layers.Conv2D(128, (4, 2), activation=act_fun, kernel_initializer=act_init, padding='same')(c6)
@@ -115,7 +115,7 @@ c5 = tf.keras.layers.Conv2D(256, (2, 3), activation=act_fun, kernel_initializer=
 
 #Expansive path
 u6 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c5)
-u6 = tf.keras.layers.concatenate([u6, c4]) # Output size is 6x6x128
+u6 = tf.keras.layers.concatenate([u6, c4]) # Output size is 6x6x256
 c6 = tf.keras.layers.Conv2D(128, (2, 4), activation=act_fun, kernel_initializer=act_init, padding='same')(u6)
 c6 = tf.keras.layers.Dropout(0.2)(c6)
 c6 = tf.keras.layers.Conv2D(128, (2, 4), activation=act_fun, kernel_initializer=act_init, padding='same')(c6)
@@ -172,7 +172,7 @@ c5 = tf.keras.layers.Conv2D(256, (3, 3), activation=act_fun, kernel_initializer=
 
 #Expansive path
 u6 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c5)
-u6 = tf.keras.layers.concatenate([u6, c4]) # Output size is 6x6x128
+u6 = tf.keras.layers.concatenate([u6, c4]) # Output size is 6x6x256
 c6 = tf.keras.layers.Conv2D(128, (4, 4), activation=act_fun, kernel_initializer=act_init, padding='same')(u6)
 c6 = tf.keras.layers.Dropout(0.2)(c6)
 c6 = tf.keras.layers.Conv2D(128, (4, 4), activation=act_fun, kernel_initializer=act_init, padding='same')(c6)
